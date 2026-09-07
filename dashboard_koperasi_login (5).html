@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50 text-slate-800">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koperasi Produsen Mitra Tani Berkah - Smart Agrikultur Dashboard</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        emerald: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            200: '#a7f3d0',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            800: '#065f46',
+                            900: '#064e3b'
+                        },
+                        sage: {
+                            50: '#f4f7f5',
+                            100: '#e3eae5',
+                            500: '#5c8374',
+                            600: '#46685b',
+                            700: '#324b41'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e6f4ed 100%);
+            color: #1e293b;
+        }
+
+        /* Soft Modern Card Styling */
+        .soft-card {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.03), 0 8px 10px -6px rgba(15, 23, 42, 0.02);
+        }
+
+        .soft-card-hover {
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .soft-card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 30px -10px rgba(5, 150, 105, 0.08), 0 8px 12px -6px rgba(15, 23, 42, 0.04);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-100%) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .toast-animate {
+            animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+</head>
+<body class="h-full antialiased text-slate-800 selection:bg-emerald-200 selection:text-emerald-900">
+
+    <!-- Toast Popup Container (Global) -->
+    <div id="toastContainer" class="fixed top-24 right-4 sm:right-8 z-50 flex flex-col space-y-3 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- ==================== PUBLIC FARMER FORM (SIMULASI LINK SHARE) ==================== -->
+    <div id="publicFormContainer" class="hidden min-h-screen bg-slate-100 py-8 px-4 sm:px-6 relative flex flex-col items-center justify-center">
+        <!-- Tombol kembali untuk keperluan simulasi prototype -->
+        <button onclick="closePublicForm()" class="absolute top-4 left-4 sm:top-6 sm:left-6 bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl text-xs font-bold shadow-sm hover:bg-slate-50 flex items-center transition-all z-10">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Dashboard
+        </button>
+
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100 mt-12 sm:mt-0 relative z-0">
+            <div class="bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 px-6 py-8 text-white text-center relative overflow-hidden">
+                <!-- Dekorasi Background -->
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-amber-300/10 rounded-full blur-2xl"></div>
+                
+                <div class="w-16 h-16 bg-white/20 rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4 border border-white/30 backdrop-blur-sm relative z-10 shadow-lg">
+                    <i class="fa-solid fa-tractor"></i>
+                </div>
+                <h2 class="font-extrabold text-2xl tracking-tight relative z-10">Lapor Garapan</h2>
+                <p class="text-emerald-100 text-sm mt-1.5 font-medium relative z-10">Koperasi Produsen Mitra Tani Berkah</p>
+            </div>
+            
+            <form id="publicActivityForm" onsubmit="handlePublicActivitySubmit(event)" class="p-6 sm:p-8 space-y-5 text-sm text-slate-700 bg-white">
+                <div class="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl text-xs font-medium flex items-start">
+                    <i class="fa-solid fa-circle-info text-amber-500 mt-0.5 mr-2 text-sm"></i>
+                    Pastikan Anda mengisi data sesuai kondisi aktual di lahan garapan hari ini.
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1.5">Nama Lengkap Petani <span class="text-rose-500">*</span></label>
+                    <input type="text" id="pubNama" required placeholder="Sesuai KTP / Terdaftar" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1.5">Lokasi / Blok Lahan <span class="text-rose-500">*</span></label>
+                    <input type="text" id="pubAlamat" required placeholder="Contoh: Blok Sawah Kidul" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1.5">Luas (Ha) <span class="text-rose-500">*</span></label>
+                        <input type="number" step="0.01" min="0" id="pubLuasLahan" required placeholder="0.00" class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1.5">Komoditi <span class="text-rose-500">*</span></label>
+                        <select id="pubKomoditi" required class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all">
+                            <option value="">-- Pilih --</option>
+                            <option value="Padi">Padi</option>
+                            <option value="Jagung">Jagung</option>
+                            <option value="Cabai Rawit">Cabai Rawit</option>
+                            <option value="Cabai Domba">Cabai Domba</option>
+                            <option value="Bawang Merah">Bawang Merah</option>
+                            <option value="Kol">Kol</option>
+                            <option value="Tomat">Tomat</option>
+                            <option value="Terong">Terong</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1.5">Keterangan Aktivitas <span class="text-rose-500">*</span></label>
+                    <textarea id="pubKeterangan" rows="3" required placeholder="Ceritakan apa yang dikerjakan hari ini (misal: panen, pemupukan, penyemprotan hama)..." class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-none transition-all"></textarea>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1.5">Foto Kondisi Lahan (Opsional)</label>
+                    <input type="file" id="pubFotoInput" accept="image/*" onchange="previewPublicImageUpload(event)" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 transition-all cursor-pointer">
+                    
+                    <div id="publicImagePreviewContainer" class="mt-3 hidden relative rounded-xl overflow-hidden shadow-sm border border-slate-200">
+                        <img id="publicImagePreview" src="" alt="Preview" class="w-full h-48 object-cover">
+                        <button type="button" onclick="clearPublicImagePreview()" class="absolute top-2 right-2 bg-slate-900/60 backdrop-blur-sm text-white rounded-full w-8 h-8 flex items-center justify-center text-sm hover:bg-rose-500 transition-colors">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-4 mt-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-base shadow-lg shadow-amber-500/30 transition-all transform hover:-translate-y-1 active:translate-y-0 flex justify-center items-center">
+                    <i class="fa-solid fa-cloud-arrow-up mr-2 text-lg"></i> Kirim Laporan Ke Koperasi
+                </button>
+            </form>
+        </div>
+        <div class="mt-6 text-slate-400 text-xs flex items-center space-x-2">
+            <i class="fa-solid fa-shield-check"></i>
+            <span>Data Anda dienkripsi & aman.</span>
+        </div>
+    </div>
+
+
+    <!-- ==================== MAIN DASHBOARD AREA (Always Visible) ==================== -->
+    <div id="dashboardContainer" class="flex flex-col min-h-screen">
+        
+        <!-- Header Navigation -->
+        <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-20">
+                    
+                    <!-- Logo & Brand Title -->
+                    <div class="flex items-center space-x-3.5">
+                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-amber-400 p-0.5 shadow-md flex items-center justify-center">
+                            <div class="w-full h-full bg-white rounded-[14px] flex items-center justify-center overflow-hidden">
+                                <img src="logo koperasi.png" alt="Logo Koperasi" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <i class="fa-solid fa-leaf text-emerald-600 hidden"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h1 class="text-base sm:text-xl font-extrabold tracking-tight text-slate-900">
+                                    Mitra Tani Berkah
+                                </h1>
+                                <span class="hidden md:inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100/80 text-emerald-800 border border-emerald-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span> Smart System
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 hidden sm:block">Sistem Agrikultur Terintegrasi</p>
+                        </div>
+                    </div>
+
+                    <!-- Action Bar Controls -->
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <button onclick="openAiConsultantModal()" class="inline-flex items-center px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/80 shadow-sm transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-2 text-purple-600"></i>
+                            <span class="hidden lg:inline">Tanya</span> ✨ AI
+                        </button>
+                        <button onclick="openMemberModal()" class="inline-flex items-center px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/10 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0">
+                            <i class="fa-solid fa-user-plus mr-2 text-sm"></i>
+                            <span class="hidden sm:inline">Tambah Anggota</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Container -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+            <!-- Stat Counter Cards -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                
+                <!-- Stat 1: Total Anggota -->
+                <div class="soft-card rounded-2xl p-5 soft-card-hover border-l-4 border-l-emerald-500 relative overflow-hidden">
+                    <div class="flex justify-between items-start relative z-10">
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Anggota</p>
+                            <h3 id="statTotalMembers" class="text-3xl font-extrabold text-slate-900 mt-1">0</h3>
+                            <p class="text-xs text-slate-500 mt-1.5 flex items-center">
+                                <i class="fa-solid fa-id-card text-emerald-600 mr-1.5"></i> Auto ID Generatif
+                            </p>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg border border-emerald-100">
+                            <i class="fa-solid fa-users-gear"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat 2: Anggota Aktif -->
+                <div class="soft-card rounded-2xl p-5 soft-card-hover border-l-4 border-l-teal-500 relative overflow-hidden">
+                    <div class="flex justify-between items-start relative z-10">
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Anggota Aktif</p>
+                            <h3 id="statActiveMembers" class="text-3xl font-extrabold text-teal-700 mt-1">0</h3>
+                            <p class="text-xs text-teal-700 font-medium mt-1.5 flex items-center">
+                                <i class="fa-solid fa-circle-check mr-1.5"></i> <span id="statActivePercentage">0%</span> produktif
+                            </p>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center text-lg border border-teal-100">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat 3: Anggota Non-Aktif -->
+                <div class="soft-card rounded-2xl p-5 soft-card-hover border-l-4 border-l-amber-500 relative overflow-hidden">
+                    <div class="flex justify-between items-start relative z-10">
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Anggota Non-Aktif</p>
+                            <h3 id="statInactiveMembers" class="text-3xl font-extrabold text-amber-600 mt-1">0</h3>
+                            <p class="text-xs text-slate-500 mt-1.5 flex items-center">
+                                <i class="fa-solid fa-user-clock text-amber-500 mr-1.5"></i> Perlu pembinaan
+                            </p>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg border border-amber-100">
+                            <i class="fa-solid fa-user-slash"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat 4: Total Luas Lahan -->
+                <div class="soft-card rounded-2xl p-5 soft-card-hover border-l-4 border-l-indigo-500 relative overflow-hidden">
+                    <div class="flex justify-between items-start relative z-10">
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Luas Lahan</p>
+                            <h3 id="statTotalLand" class="text-3xl font-extrabold text-indigo-900 mt-1">0 <span class="text-sm font-normal text-slate-400">Ha</span></h3>
+                            <p class="text-xs text-slate-500 mt-1.5 flex items-center">
+                                <i class="fa-solid fa-layer-group text-indigo-500 mr-1.5"></i> <span id="statTotalActivities">0</span> catatan garapan
+                            </p>
+                        </div>
+                        <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg border border-indigo-100">
+                            <i class="fa-solid fa-mountain-sun"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- AI Assistant Banner -->
+            <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 p-5 rounded-2xl text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-11 h-11 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-300 text-xl flex-shrink-0">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm sm:text-base text-amber-300 flex items-center">
+                            <i class="fa-solid fa-sparkles mr-1.5 text-xs"></i> Asisten Smart Agriculture Gemini AI
+                        </h4>
+                        <p class="text-xs text-slate-200 mt-0.5">Saran racikan pupuk, solusi hama Kol, Timun, Cabai Domba, Tomat, Terong, dan laporan garapan otomatis.</p>
+                    </div>
+                </div>
+                <button onclick="openAiConsultantModal()" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>✨ Konsultasi AI Sekarang</span>
+                </button>
+            </div>
+
+            <!-- Navigation Tabs & Action Toolbar -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/80 pb-4">
+                
+                <!-- Tabs Switcher -->
+                <div class="flex space-x-1.5 bg-slate-200/60 p-1.5 rounded-2xl border border-slate-300/50 text-sm font-semibold">
+                    <button id="tabBtnMembers" onclick="switchTab('members')" class="px-5 py-2 rounded-xl transition-all duration-200 bg-emerald-600 text-white font-bold shadow-sm flex items-center space-x-2">
+                        <i class="fa-solid fa-users"></i>
+                        <span class="hidden sm:inline">Data Anggota Koperasi</span>
+                        <span class="sm:hidden">Anggota</span>
+                    </button>
+                    <button id="tabBtnActivities" onclick="switchTab('activities')" class="px-5 py-2 rounded-xl transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-tractor"></i>
+                        <span class="hidden sm:inline">Aktivitas Garapan Petani</span>
+                        <span class="sm:hidden">Aktivitas</span>
+                    </button>
+                    <button id="tabBtnAnalytics" onclick="switchTab('analytics')" class="px-5 py-2 rounded-xl transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center space-x-2">
+                        <i class="fa-solid fa-chart-pie"></i>
+                        <span class="hidden sm:inline">Analisis Komoditi</span>
+                        <span class="sm:hidden">Analisis</span>
+                    </button>
+                </div>
+
+                <!-- Action Buttons -->
+                <div id="membersActionButtons" class="flex items-center space-x-3">
+                    <button onclick="exportToExcel()" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 shadow-sm transition-all duration-200">
+                        <i class="fa-solid fa-file-excel mr-2 text-emerald-600 text-base"></i>
+                        Unduh Excel (.xlsx)
+                    </button>
+                </div>
+
+                <div id="activitiesActionButtons" class="hidden flex flex-wrap gap-2 items-center">
+                    <button onclick="openFarmerShareModal()" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-slate-200/80 text-slate-700 border border-slate-200 shadow-sm transition-all duration-200">
+                        <i class="fa-solid fa-share-nodes mr-2 text-amber-600"></i>
+                        Share Form
+                    </button>
+                    <button onclick="openActivityModal()" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md transition-all duration-200">
+                        <i class="fa-solid fa-plus-circle mr-2"></i>
+                        Input Garapan
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 1: MEMBERS MANAGEMENT -->
+            <section id="membersTab" class="space-y-4">
+                
+                <!-- Toolbar Search & Filter -->
+                <div class="soft-card rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="relative w-full sm:w-80">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <input type="text" id="memberSearchInput" oninput="renderMembersTable()" placeholder="Cari No. ID, nama, komoditi..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
+                    </div>
+
+                    <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+                        <label for="statusFilter" class="text-xs font-semibold text-slate-500">Status:</label>
+                        <select id="statusFilter" onchange="renderMembersTable()" class="px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <option value="ALL">Semua Status</option>
+                            <option value="Aktif">Aktif</option>
+                            <option value="Non-Aktif">Non-Aktif</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Members Data Table -->
+                <div class="soft-card rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse min-w-[800px]">
+                            <thead>
+                                <tr class="bg-slate-100/80 text-slate-600 text-xs uppercase font-bold tracking-wider border-b border-slate-200">
+                                    <th class="py-4 px-4 text-center">No</th>
+                                    <th class="py-4 px-4">No. ID Anggota</th>
+                                    <th class="py-4 px-4">Nama Lengkap</th>
+                                    <th class="py-4 px-4">TTL</th>
+                                    <th class="py-4 px-4">Alamat</th>
+                                    <th class="py-4 px-4 text-right">Luas (Ha)</th>
+                                    <th class="py-4 px-4">Komoditi</th>
+                                    <th class="py-4 px-4">No. WhatsApp</th>
+                                    <th class="py-4 px-4 text-center">Status</th>
+                                    <th class="py-4 px-4 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="membersTableBody" class="divide-y divide-slate-100 text-sm font-medium text-slate-700">
+                                <!-- Dynamically generated rows -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="emptyMembersState" class="hidden p-12 text-center">
+                        <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl border border-slate-200">
+                            <i class="fa-solid fa-users-slash"></i>
+                        </div>
+                        <h4 class="text-slate-700 font-bold text-base">Belum Ada Data Anggota</h4>
+                        <p class="text-slate-400 text-xs mt-1">Klik tombol "Tambah Anggota" untuk memasukkan data baru.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: FARMER ACTIVITIES FEED -->
+            <section id="activitiesTab" class="hidden space-y-6">
+                
+                <div class="soft-card rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="relative w-full sm:w-80">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </div>
+                        <input type="text" id="activitySearchInput" oninput="renderActivitiesFeed()" placeholder="Cari nama, lokasi, komoditi..." class="w-full pl-10 pr-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                    </div>
+                    <div class="text-xs text-slate-500 flex items-center font-medium">
+                        <i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i> Persistensi Otomatis Realtime
+                    </div>
+                </div>
+
+                <div id="activitiesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamically rendered activity items -->
+                </div>
+
+                <div id="emptyActivitiesState" class="hidden soft-card rounded-2xl p-12 text-center border border-slate-200">
+                    <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl border border-amber-200">
+                        <i class="fa-solid fa-tractor"></i>
+                    </div>
+                    <h4 class="text-slate-700 font-bold text-base">Belum Ada Catatan Garapan</h4>
+                    <p class="text-slate-400 text-xs mt-1">Klik "Input Garapan Baru" atau bagikan link form kepada anggota petani.</p>
+                </div>
+            </section>
+
+            <!-- TAB 3: COMMODITY ANALYTICS -->
+            <section id="analyticsTab" class="hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <div class="soft-card p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <h3 class="font-bold text-slate-900 text-base flex items-center">
+                                <i class="fa-solid fa-chart-pie text-emerald-600 mr-2"></i> Distribusi Komoditi Anggota
+                            </h3>
+                            <span class="text-xs text-slate-400">Total Komoditi</span>
+                        </div>
+                        <div class="relative h-64 flex items-center justify-center">
+                            <canvas id="commodityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="soft-card p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <h3 class="font-bold text-slate-900 text-base flex items-center">
+                                <i class="fa-solid fa-chart-column text-teal-600 mr-2"></i> Luas Lahan per Komoditi (Ha)
+                            </h3>
+                            <span class="text-xs text-slate-400">Hektar (Ha)</span>
+                        </div>
+                        <div class="relative h-64 flex items-center justify-center">
+                            <canvas id="landAreaChart"></canvas>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-auto bg-white/70 backdrop-blur-md border-t border-slate-200/80 py-6 text-xs text-slate-500">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-leaf text-emerald-600 text-base"></i>
+                    <span class="font-bold text-slate-700">Koperasi Produsen Mitra Tani Berkah</span>
+                    <span>&copy; 2026. All rights reserved.</span>
+                </div>
+                <div class="text-slate-400">
+                    Sistem Agrikultur Terintegrasi Soft Modern UI
+                </div>
+            </div>
+        </footer>
+    </div>
+
+
+    <!-- ==================== ALL MODALS ==================== -->
+
+    <!-- MODAL 1: FORM TAMBAH / EDIT ANGGOTA -->
+    <div id="memberModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden transition-opacity">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-slate-100 transform transition-all">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-4 text-white flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-user-pen text-amber-300 text-lg"></i>
+                    <h3 id="memberModalTitle" class="font-bold text-lg">Tambah Anggota Koperasi</h3>
+                </div>
+                <button onclick="closeMemberModal()" class="text-emerald-100 hover:text-white text-xl p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="memberForm" onsubmit="handleMemberSubmit(event)" class="p-6 space-y-4 text-sm text-slate-700 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                <input type="hidden" id="memberId">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nama Lengkap <span class="text-rose-500">*</span></label>
+                    <input type="text" id="memberNama" required placeholder="Contoh: Budi Santoso" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Tempat, Tanggal Lahir <span class="text-rose-500">*</span></label>
+                    <input type="text" id="memberTtl" required placeholder="Contoh: Bandung, 15 Agustus 1982" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Alamat Lengkap <span class="text-rose-500">*</span></label>
+                    <textarea id="memberAlamat" rows="2" required placeholder="Contoh: Dusun Sukatani RT 02/05, Desa Sukamaju" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none"></textarea>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Luas Lahan (Hektar) <span class="text-rose-500">*</span></label>
+                        <input type="number" step="0.01" min="0" id="memberLuasLahan" required placeholder="Contoh: 1.5" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Komoditi Utama <span class="text-rose-500">*</span></label>
+                        <select id="memberKomoditi" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+                            <option value="">-- Pilih Komoditi --</option>
+                            <option value="Padi">Padi</option>
+                            <option value="Jagung">Jagung</option>
+                            <option value="Cabai Rawit">Cabai Rawit</option>
+                            <option value="Cabai Keriting">Cabai Keriting</option>
+                            <option value="Cabai Domba">Cabai Domba</option>
+                            <option value="Bawang Merah">Bawang Merah</option>
+                            <option value="Kol">Kol</option>
+                            <option value="Timun">Timun</option>
+                            <option value="Kacang Panjang">Kacang Panjang</option>
+                            <option value="Tomat">Tomat</option>
+                            <option value="Terong">Terong</option>
+                            <option value="Kopi">Kopi</option>
+                            <option value="Kedelai">Kedelai</option>
+                            <option value="Sayur-Mayur">Sayur-Mayur</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">No. WhatsApp <span class="text-rose-500">*</span></label>
+                        <input type="tel" id="memberNoHp" required placeholder="Contoh: 081234567890" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Status Keaktifan <span class="text-rose-500">*</span></label>
+                        <select id="memberStatus" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:outline-none">
+                            <option value="Aktif">Aktif</option>
+                            <option value="Non-Aktif">Non-Aktif</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-4 flex items-center justify-end space-x-3 border-t border-slate-100">
+                    <button type="button" onclick="closeMemberModal()" class="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md">
+                        <i class="fa-solid fa-save mr-1.5"></i> Simpan Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: KONFIRMASI HAPUS -->
+    <div id="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full mx-4 p-6 text-center space-y-4 border border-slate-100">
+            <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto text-2xl border border-rose-100">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-900 text-lg">Konfirmasi Hapus</h3>
+                <p class="text-slate-500 text-xs mt-1">Apakah Anda yakin ingin menghapus data anggota <strong id="deleteTargetName" class="text-slate-800"></strong>?</p>
+            </div>
+            <div class="flex space-x-3 pt-2">
+                <button onclick="closeDeleteModal()" class="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50">Batal</button>
+                <button id="confirmDeleteBtn" onclick="confirmDeleteMember()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-sm shadow-md">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: FORM AKTIVITAS GARAPAN PETANI -->
+    <div id="activityModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden overflow-y-auto py-6">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden border border-slate-100 my-auto">
+            <div class="bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 text-white flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-clipboard-check text-amber-100 text-lg"></i>
+                    <h3 class="font-bold text-lg">Form Aktivitas Garapan</h3>
+                </div>
+                <button onclick="closeActivityModal()" class="text-amber-100 hover:text-white text-xl p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="activityForm" onsubmit="handleActivitySubmit(event)" class="p-6 space-y-4 text-sm text-slate-700">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nama Lengkap Petani <span class="text-rose-500">*</span></label>
+                    <input type="text" id="actNama" required placeholder="Contoh: Budi Santoso" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Alamat Lahan <span class="text-rose-500">*</span></label>
+                    <input type="text" id="actAlamat" required placeholder="Lokasi Lahan / Blok Sawah" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Luas Lahan (Ha) <span class="text-rose-500">*</span></label>
+                        <input type="number" step="0.01" min="0" id="actLuasLahan" required placeholder="Luas" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Komoditi <span class="text-rose-500">*</span></label>
+                        <select id="actKomoditi" required class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none">
+                            <option value="">-- Pilih Komoditi --</option>
+                            <option value="Padi">Padi</option>
+                            <option value="Jagung">Jagung</option>
+                            <option value="Cabai Rawit">Cabai Rawit</option>
+                            <option value="Cabai Keriting">Cabai Keriting</option>
+                            <option value="Cabai Domba">Cabai Domba</option>
+                            <option value="Bawang Merah">Bawang Merah</option>
+                            <option value="Kol">Kol</option>
+                            <option value="Timun">Timun</option>
+                            <option value="Kacang Panjang">Kacang Panjang</option>
+                            <option value="Tomat">Tomat</option>
+                            <option value="Terong">Terong</option>
+                            <option value="Kopi">Kopi</option>
+                            <option value="Kedelai">Kedelai</option>
+                            <option value="Sayur-Mayur">Sayur-Mayur</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block font-semibold text-slate-700">Keterangan Garapan Aktivitas <span class="text-rose-500">*</span></label>
+                        <button type="button" onclick="generateAiRecommendation()" class="text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 px-2.5 py-1 rounded-lg border border-purple-200 flex items-center transition-colors">
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1 text-purple-600"></i> ✨ Rekomendasi AI
+                        </button>
+                    </div>
+                    <textarea id="actKeterangan" rows="3" required placeholder="Jelaskan aktivitas garapan..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none"></textarea>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block font-semibold text-slate-700">Dokumentasi Kegiatan (Foto Field)</label>
+                        <button type="button" onclick="generateAiPhotoDocumentation()" class="text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg border border-indigo-200 flex items-center transition-colors">
+                            <i class="fa-solid fa-image mr-1 text-indigo-600"></i> ✨ Buat Gambar AI
+                        </button>
+                    </div>
+                    <input type="file" id="actFotoInput" accept="image/*" onchange="previewImageUpload(event)" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100">
+                    
+                    <div id="imagePreviewContainer" class="mt-2 hidden relative">
+                        <img id="imagePreview" src="" alt="Preview" class="h-36 w-full object-cover rounded-xl border border-slate-200">
+                        <button type="button" onclick="clearImagePreview()" class="absolute top-2 right-2 bg-slate-900/70 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-slate-900">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div id="aiImageLoading" class="hidden mt-2 p-4 bg-indigo-50 border border-indigo-100 rounded-xl text-center space-y-2">
+                        <i class="fa-solid fa-spinner fa-spin text-indigo-600 text-xl"></i>
+                        <p class="text-xs font-semibold text-indigo-800">Sedang membuat foto dengan Imagen AI...</p>
+                    </div>
+                </div>
+                <div class="pt-4 flex items-center justify-end space-x-3 border-t border-slate-100">
+                    <button type="button" onclick="closeActivityModal()" class="px-4 py-2 rounded-xl text-slate-500 hover:bg-slate-100 font-semibold">Batal</button>
+                    <button type="submit" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-md">
+                        <i class="fa-solid fa-paper-plane mr-1.5"></i> Kirim Laporan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: SHAREABLE FORM LINK DIALOG -->
+    <div id="farmerShareModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 p-6 space-y-4 border border-slate-100">
+            <div class="flex items-center space-x-3 text-emerald-700">
+                <div class="w-10 h-10 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 border border-emerald-100">
+                    <i class="fa-solid fa-share-nodes text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-slate-900">Bagikan Form Ke Petani</h3>
+                    <p class="text-xs text-slate-500">Petani mengisi laporan secara mandiri dari perangkat lokal</p>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <label class="text-xs font-semibold text-slate-500">Tautan Form Garapan Petani (Local URL):</label>
+                <div class="flex items-center bg-slate-50 rounded-xl p-2 border border-slate-200">
+                    <input type="text" id="shareUrlInput" readonly class="bg-transparent w-full text-xs text-slate-700 font-mono px-2 focus:outline-none">
+                    <button onclick="copyShareUrl()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded-lg font-bold transition-colors">
+                        <i class="fa-regular fa-copy mr-1"></i> Salin
+                    </button>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button onclick="closeFarmerShareModal()" class="px-4 py-2 rounded-xl text-slate-500 font-semibold text-xs">Tutup</button>
+                <button onclick="simulateFarmerPublicForm()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md">
+                    <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i> Buka Form
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: GEMINI AI CONSULTANT MODAL -->
+    <div id="aiConsultantModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm hidden overflow-y-auto py-6">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden border border-slate-100 flex flex-col h-[600px] my-auto">
+            <div class="bg-gradient-to-r from-purple-800 via-indigo-900 to-purple-900 px-6 py-4 text-white flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-300">
+                        <i class="fa-solid fa-wand-magic-sparkles text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg flex items-center">Konsultan AI Gemini</h3>
+                        <p class="text-xs text-purple-200">Mitra Cerdas Koperasi Mitra Tani Berkah</p>
+                    </div>
+                </div>
+                <button onclick="closeAiConsultantModal()" class="text-purple-200 hover:text-white text-xl p-1">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="aiChatBox" class="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-4 bg-slate-50">
+                <div class="flex items-start space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs flex-shrink-0 font-bold shadow-sm">AI</div>
+                    <div class="bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-200/80 text-sm text-slate-800 max-w-lg leading-relaxed">
+                        <p class="font-bold text-purple-900 mb-1">Salam Sejahtera Petani &amp; Pengurus Koperasi! 👋</p>
+                        Saya adalah asisten AI resmi dari <strong>Koperasi Produsen Mitra Tani Berkah</strong>. Ada yang bisa saya bantu mengenai hama Kol, Cabai Domba, Tomat, Terong, racikan pupuk NPK, atau pola tanam musim ini?
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-2.5 bg-slate-100 border-t border-slate-200/80 flex items-center space-x-2 overflow-x-auto text-xs whitespace-nowrap custom-scrollbar flex-shrink-0">
+                <span class="text-slate-500 font-semibold"><i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i>Saran:</span>
+                <button onclick="sendQuickPrompt('Bagaimana racikan pupuk &amp; perawatan terbaik untuk komoditi Cabai Domba dan Tomat agar bebas hama ulat?')" class="px-3 py-1 bg-white hover:bg-purple-50 text-purple-700 rounded-full border border-purple-200 shadow-sm transition-colors">🌶️ Perawatan Cabai &amp; Tomat</button>
+                <button onclick="sendQuickPrompt('Sebutkan langkah penanganan hama ulat krop pada tanaman Kol secara efektif.')" class="px-3 py-1 bg-white hover:bg-purple-50 text-purple-700 rounded-full border border-purple-200 shadow-sm transition-colors">🥬 Hama Kol</button>
+            </div>
+            <div class="p-4 bg-white border-t border-slate-200/80 flex-shrink-0">
+                <form onsubmit="handleAiChatSubmit(event)" class="flex items-center space-x-2">
+                    <input type="text" id="aiChatInput" placeholder="Ketik pertanyaan agrikultur..." required class="flex-1 px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-purple-600 focus:bg-white focus:outline-none text-sm">
+                    <button type="submit" id="aiSendBtn" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm shadow-md transition-all flex items-center space-x-1.5">
+                        <span>✨ Kirim</span>
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // ==========================================
+        // 1. SISTEM DATA & DASHBOARD (Tanpa Login)
+        // ==========================================
+        const STORAGE_KEY_MEMBERS = 'KOP_MITRA_TANI_MEMBERS_V2';
+        const STORAGE_KEY_ACTIVITIES = 'KOP_MITRA_TANI_ACTIVITIES_V2';
+        const STORAGE_KEY_AUTO_INC = 'KOP_MITRA_TANI_AUTO_INC';
+
+        const defaultMembers = [
+            { id: 'm-101', noId: 'KTB-2026-001', nama: 'Budi Santoso', ttl: 'Tasikmalaya, 12 April 1980', alamat: 'Dusun Sukatani RT 01/03', luasLahan: 1.5, komoditi: 'Padi', noHp: '081234567890', status: 'Aktif' },
+            { id: 'm-102', noId: 'KTB-2026-002', nama: 'Hj. Siti Rahmah', ttl: 'Garut, 25 November 1978', alamat: 'Blok Sawah Tengah', luasLahan: 2.2, komoditi: 'Cabai Domba', noHp: '085223344556', status: 'Aktif' }
+        ];
+
+        const defaultActivities = [
+            { id: 'a-201', nama: 'Budi Santoso', alamat: 'Dusun Sukatani RT 01/03', luasLahan: 1.5, komoditi: 'Padi', keterangan: 'Penyemprotan pupuk.', foto: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80', tanggal: '07 Sep 2026, 08:30 WIB' }
+        ];
+
+        function loadSavedData() {
+            try {
+                const savedMembers = localStorage.getItem(STORAGE_KEY_MEMBERS);
+                const savedActivities = localStorage.getItem(STORAGE_KEY_ACTIVITIES);
+                window.membersData = savedMembers ? JSON.parse(savedMembers) : [...defaultMembers];
+                window.activitiesData = savedActivities ? JSON.parse(savedActivities) : [...defaultActivities];
+                if (!localStorage.getItem(STORAGE_KEY_AUTO_INC)) localStorage.setItem(STORAGE_KEY_AUTO_INC, '5');
+            } catch (err) {
+                window.membersData = [...defaultMembers];
+                window.activitiesData = [...defaultActivities];
+            }
+        }
+
+        function saveAllData() {
+            try {
+                localStorage.setItem(STORAGE_KEY_MEMBERS, JSON.stringify(window.membersData));
+                localStorage.setItem(STORAGE_KEY_ACTIVITIES, JSON.stringify(window.activitiesData));
+            } catch (err) {}
+        }
+
+        function generateAutoMemberId() {
+            let currentInc = parseInt(localStorage.getItem(STORAGE_KEY_AUTO_INC) || '5', 10);
+            const formattedNum = String(currentInc).padStart(3, '0');
+            localStorage.setItem(STORAGE_KEY_AUTO_INC, String(currentInc + 1));
+            return `KTB-${new Date().getFullYear()}-${formattedNum}`;
+        }
+
+        // ==========================================
+        // 2. UI, TOAST, CHARTS, & MODALS
+        // ==========================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const isSuccess = type === 'success';
+            const icon = isSuccess ? 'fa-circle-check text-emerald-600' : (type === 'delete' ? 'fa-trash-can text-rose-600' : 'fa-circle-info text-amber-600');
+            const borderCol = isSuccess ? 'border-emerald-500' : (type === 'delete' ? 'border-rose-500' : 'border-amber-500');
+
+            toast.className = `toast-animate pointer-events-auto bg-white text-slate-800 rounded-2xl shadow-xl p-4 border-l-4 ${borderCol} flex items-start space-x-3 border border-slate-100`;
+            toast.innerHTML = `
+                <i class="fa-solid ${icon} text-lg mt-0.5"></i>
+                <div class="flex-1">
+                    <p class="text-xs font-bold text-slate-900">${isSuccess ? 'Berhasil!' : (type === 'delete' ? 'Terhapus!' : 'Informasi')}</p>
+                    <p class="text-xs text-slate-600 mt-0.5">${message}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 text-xs">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { if (toast.parentElement) toast.remove(); }, 4000);
+        }
+
+        function updateDashboardUI() {
+            const members = window.membersData || [];
+            const activities = window.activitiesData || [];
+            const total = members.length;
+            const active = members.filter(m => m.status === 'Aktif').length;
+            
+            document.getElementById('statTotalMembers').innerText = total;
+            document.getElementById('statActiveMembers').innerText = active;
+            document.getElementById('statInactiveMembers').innerText = total - active;
+            document.getElementById('statActivePercentage').innerText = (total > 0 ? Math.round((active / total) * 100) : 0) + '%';
+            document.getElementById('statTotalLand').innerHTML = `${members.reduce((sum, m) => sum + (parseFloat(m.luasLahan) || 0), 0).toFixed(1)} <span class="text-sm font-normal text-slate-400">Ha</span>`;
+            document.getElementById('statTotalActivities').innerText = activities.length;
+
+            renderMembersTable();
+            renderActivitiesFeed();
+            saveAllData();
+        }
+
+        function renderMembersTable() {
+            const tbody = document.getElementById('membersTableBody');
+            const emptyState = document.getElementById('emptyMembersState');
+            const searchQuery = (document.getElementById('memberSearchInput')?.value || '').toLowerCase();
+            const statusFilter = document.getElementById('statusFilter')?.value || 'ALL';
+
+            const filtered = (window.membersData || []).filter(m => {
+                const matchSearch = (m.noId||'').toLowerCase().includes(searchQuery) || m.nama.toLowerCase().includes(searchQuery) || m.komoditi.toLowerCase().includes(searchQuery);
+                const matchStatus = statusFilter === 'ALL' || m.status === statusFilter;
+                return matchSearch && matchStatus;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            tbody.innerHTML = filtered.map((m, idx) => {
+                const waUrl = `https://wa.me/${formatWhatsAppNumber(m.noHp)}?text=${encodeURIComponent(`Halo Bpk/Ibu ${m.nama} (${m.noId}), dari Koperasi.`)}`;
+                const statusBadge = m.status === 'Aktif' ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>Aktif</span>` : `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>Non-Aktif</span>`;
+                
+                return `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-3.5 px-4 text-center text-slate-400 font-mono text-xs">${idx + 1}</td>
+                        <td class="py-3.5 px-4"><span class="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200/80 font-mono font-bold text-xs">${m.noId}</span></td>
+                        <td class="py-3.5 px-4 font-bold text-slate-900">${m.nama}</td>
+                        <td class="py-3.5 px-4 text-xs text-slate-500">${m.ttl || '-'}</td>
+                        <td class="py-3.5 px-4 text-xs text-slate-500 max-w-xs truncate" title="${m.alamat}">${m.alamat}</td>
+                        <td class="py-3.5 px-4 text-right font-bold text-emerald-700">${m.luasLahan} Ha</td>
+                        <td class="py-3.5 px-4"><span class="inline-block px-2.5 py-1 bg-slate-100 rounded-lg text-xs font-semibold text-slate-700 border border-slate-200/80">${m.komoditi}</span></td>
+                        <td class="py-3.5 px-4"><a href="${waUrl}" target="_blank" class="inline-flex items-center px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white transition-all text-xs font-bold border border-emerald-200"><i class="fa-brands fa-whatsapp text-sm mr-1.5"></i> ${m.noHp}</a></td>
+                        <td class="py-3.5 px-4 text-center">${statusBadge}</td>
+                        <td class="py-3.5 px-4 text-center space-x-1">
+                            <button onclick="editMember('${m.id}')" title="Edit Anggota" class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="promptDeleteMember('${m.id}', '${m.nama.replace(/'/g, "\\'")} ')" title="Hapus Anggota" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                        </td>
+                    </tr>`;
+            }).join('');
+        }
+
+        function renderActivitiesFeed() {
+            const grid = document.getElementById('activitiesGrid');
+            const emptyState = document.getElementById('emptyActivitiesState');
+            const searchQuery = (document.getElementById('activitySearchInput')?.value || '').toLowerCase();
+
+            const filtered = (window.activitiesData || []).filter(a => a.nama.toLowerCase().includes(searchQuery) || a.komoditi.toLowerCase().includes(searchQuery) || a.keterangan.toLowerCase().includes(searchQuery));
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(a => `
+                <div class="soft-card rounded-2xl overflow-hidden soft-card-hover flex flex-col">
+                    <div class="relative h-48 bg-slate-100 overflow-hidden">
+                        <img src="${a.foto || 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80'}" alt="Dokumentasi Garapan" class="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300">
+                        <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-md text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-200/80 shadow-sm">
+                            <i class="fa-solid fa-seedling mr-1 text-emerald-600"></i>${a.komoditi}
+                        </div>
+                    </div>
+                    <div class="p-5 flex-1 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+                                <span><i class="fa-regular fa-clock mr-1"></i>${a.tanggal}</span>
+                                <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">${a.luasLahan} Ha</span>
+                            </div>
+                            <h4 class="font-bold text-slate-900 text-base flex items-center"><i class="fa-solid fa-user text-slate-400 mr-2 text-sm"></i>${a.nama}</h4>
+                            <p class="text-xs text-slate-500 mt-1 flex items-center"><i class="fa-solid fa-location-dot text-rose-500 mr-1.5"></i>${a.alamat}</p>
+                            <p class="text-xs text-slate-600 mt-3 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200/80">"${a.keterangan}"</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ==========================================
+        // 3. BINDING FUNGSI KE WINDOW & INISIALISASI
+        // ==========================================
+        
+        // Members
+        window.openMemberModal = (member = null) => {
+            const form = document.getElementById('memberForm');
+            form.reset();
+            if (member) {
+                document.getElementById('memberModalTitle').innerText = `Edit Anggota (${member.noId})`;
+                document.getElementById('memberId').value = member.id;
+                document.getElementById('memberNama').value = member.nama;
+                document.getElementById('memberTtl').value = member.ttl;
+                document.getElementById('memberAlamat').value = member.alamat;
+                document.getElementById('memberLuasLahan').value = member.luasLahan;
+                document.getElementById('memberKomoditi').value = member.komoditi;
+                document.getElementById('memberNoHp').value = member.noHp;
+                document.getElementById('memberStatus').value = member.status;
+            } else {
+                document.getElementById('memberModalTitle').innerText = 'Tambah Anggota Koperasi Baru';
+                document.getElementById('memberId').value = '';
+            }
+            document.getElementById('memberModal').classList.remove('hidden');
+        };
+        window.closeMemberModal = () => document.getElementById('memberModal').classList.add('hidden');
+        window.editMember = id => {
+            const member = (window.membersData || []).find(m => m.id === id);
+            if (member) openMemberModal(member);
+        };
+        window.handleMemberSubmit = e => {
+            e.preventDefault();
+            const id = document.getElementById('memberId').value;
+            const data = {
+                nama: document.getElementById('memberNama').value.trim(),
+                ttl: document.getElementById('memberTtl').value.trim(),
+                alamat: document.getElementById('memberAlamat').value.trim(),
+                luasLahan: parseFloat(document.getElementById('memberLuasLahan').value) || 0,
+                komoditi: document.getElementById('memberKomoditi').value,
+                noHp: document.getElementById('memberNoHp').value.trim(),
+                status: document.getElementById('memberStatus').value
+            };
+
+            if (id) {
+                const index = window.membersData.findIndex(m => m.id === id);
+                if (index !== -1) window.membersData[index] = { ...window.membersData[index], ...data };
+                showToast(`Data <strong>${data.nama}</strong> diperbarui!`, 'success');
+            } else {
+                const newNoId = generateAutoMemberId();
+                window.membersData.unshift({ id: 'm-' + Date.now(), noId: newNoId, ...data });
+                showToast(`Anggota <strong>${data.nama}</strong> ditambahkan!`, 'success');
+            }
+            closeMemberModal();
+            updateDashboardUI();
+        };
+
+        // Delete Member
+        window.promptDeleteMember = (id, name) => {
+            window.deleteTargetId = id;
+            document.getElementById('deleteTargetName').innerText = name;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        };
+        window.closeDeleteModal = () => { document.getElementById('deleteModal').classList.add('hidden'); };
+        window.confirmDeleteMember = () => {
+            if (!window.deleteTargetId) return;
+            window.membersData = window.membersData.filter(m => m.id !== window.deleteTargetId);
+            closeDeleteModal();
+            updateDashboardUI();
+            showToast('Anggota berhasil dihapus.', 'delete');
+        };
+
+        // Activities & Utilities
+        window.openActivityModal = () => { document.getElementById('activityForm').reset(); clearImagePreview(); document.getElementById('activityModal').classList.remove('hidden'); };
+        window.closeActivityModal = () => document.getElementById('activityModal').classList.add('hidden');
+        window.previewImageUpload = e => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => { document.getElementById('imagePreview').src = e.target.result; document.getElementById('imagePreviewContainer').classList.remove('hidden'); };
+                reader.readAsDataURL(file);
+            }
+        };
+        window.clearImagePreview = () => { document.getElementById('imagePreview').src = ''; document.getElementById('imagePreviewContainer').classList.add('hidden'); document.getElementById('actFotoInput').value = ''; };
+        window.handleActivitySubmit = e => {
+            e.preventDefault();
+            const previewImg = document.getElementById('imagePreview').src;
+            window.activitiesData.unshift({
+                id: 'a-' + Date.now(),
+                nama: document.getElementById('actNama').value.trim(),
+                alamat: document.getElementById('actAlamat').value.trim(),
+                luasLahan: parseFloat(document.getElementById('actLuasLahan').value) || 0,
+                komoditi: document.getElementById('actKomoditi').value,
+                keterangan: document.getElementById('actKeterangan').value.trim(),
+                foto: previewImg || 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80',
+                tanggal: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' WIB'
+            });
+            closeActivityModal();
+            updateDashboardUI();
+            showToast('Laporan garapan tersimpan!', 'success');
+        };
+        window.formatWhatsAppNumber = phone => {
+            if (!phone) return '';
+            let cleaned = phone.replace(/\D/g, '');
+            return cleaned.startsWith('0') ? '62' + cleaned.substring(1) : cleaned;
+        };
+
+        // Misc UI
+        window.switchTab = tabName => {
+            ['members', 'activities', 'analytics'].forEach(t => {
+                const tabEl = document.getElementById(t + 'Tab');
+                const btnEl = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (t === tabName) {
+                    tabEl.classList.remove('hidden');
+                    btnEl.className = "px-5 py-2 rounded-xl transition-all duration-200 bg-emerald-600 text-white font-bold shadow-sm flex items-center space-x-2";
+                } else {
+                    tabEl.classList.add('hidden');
+                    btnEl.className = "px-5 py-2 rounded-xl transition-all duration-200 text-slate-600 hover:text-slate-900 flex items-center space-x-2";
+                }
+            });
+            document.getElementById('membersActionButtons').style.display = (tabName === 'members') ? 'flex' : 'none';
+            document.getElementById('activitiesActionButtons').style.display = (tabName === 'activities') ? 'flex' : 'none';
+        };
+
+        // AI functions placeholders
+        window.generateAiRecommendation = () => { document.getElementById('actKeterangan').value = `Pupuk NPK susulan dan penyemprotan insektisida untuk ${document.getElementById('actKomoditi').value}`; showToast("Rekomendasi diterapkan", "success"); };
+        window.generateAiPhotoDocumentation = () => { showToast("Foto simulasi dibuat", "success"); };
+        
+        // --- SHARE FORM LOCAL ---
+        window.openFarmerShareModal = () => {
+            const currentUrl = window.location.href.split('#')[0].split('?')[0] + '?form=lapor';
+            document.getElementById('shareUrlInput').value = currentUrl;
+            document.getElementById('farmerShareModal').classList.remove('hidden');
+        };
+        window.closeFarmerShareModal = () => document.getElementById('farmerShareModal').classList.add('hidden');
+        window.copyShareUrl = () => { 
+            const input = document.getElementById('shareUrlInput');
+            input.select(); 
+            document.execCommand('copy'); 
+            showToast('Tautan lokal berhasil disalin ke clipboard!', 'info'); 
+        };
+        
+        // --- LOGIC FORM PUBLIK (SHARE) ---
+        window.simulateFarmerPublicForm = () => { 
+            closeFarmerShareModal(); 
+            document.getElementById('dashboardContainer').classList.add('hidden');
+            document.getElementById('publicFormContainer').classList.remove('hidden');
+            document.getElementById('publicActivityForm').reset();
+            clearPublicImagePreview();
+        };
+
+        window.closePublicForm = () => {
+            document.getElementById('publicFormContainer').classList.add('hidden');
+            document.getElementById('dashboardContainer').classList.remove('hidden');
+        };
+
+        window.previewPublicImageUpload = e => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = ev => { 
+                    document.getElementById('publicImagePreview').src = ev.target.result; 
+                    document.getElementById('publicImagePreviewContainer').classList.remove('hidden'); 
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        window.clearPublicImagePreview = () => { 
+            document.getElementById('publicImagePreview').src = ''; 
+            document.getElementById('publicImagePreviewContainer').classList.add('hidden'); 
+            document.getElementById('pubFotoInput').value = ''; 
+        };
+
+        window.handlePublicActivitySubmit = e => {
+            e.preventDefault();
+            const previewImg = document.getElementById('publicImagePreview').src;
+            
+            window.activitiesData.unshift({
+                id: 'a-' + Date.now(),
+                nama: document.getElementById('pubNama').value.trim(),
+                alamat: document.getElementById('pubAlamat').value.trim(),
+                luasLahan: parseFloat(document.getElementById('pubLuasLahan').value) || 0,
+                komoditi: document.getElementById('pubKomoditi').value,
+                keterangan: document.getElementById('pubKeterangan').value.trim(),
+                foto: previewImg || 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=600&q=80',
+                tanggal: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' WIB'
+            });
+            
+            showToast('Laporan garapan Anda berhasil terkirim ke sistem Koperasi!', 'success');
+            closePublicForm();
+            updateDashboardUI();
+            switchTab('activities');
+        };
+        // ----------------------------------
+
+        window.exportToExcel = () => showToast("Ekspor Excel berhasil! (Simulasi)", "success");
+        window.openAiConsultantModal = () => document.getElementById('aiConsultantModal').classList.remove('hidden');
+        window.closeAiConsultantModal = () => document.getElementById('aiConsultantModal').classList.add('hidden');
+        
+        // --- Implementasi Chat AI Gemini ---
+        const appendChatMessage = (sender, text, isAi) => {
+            const chatBox = document.getElementById('aiChatBox');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = isAi ? "flex items-start space-x-3 mt-4" : "flex items-start space-x-3 justify-end mt-4";
+            
+            const avatar = isAi 
+                ? `<div class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs flex-shrink-0 font-bold shadow-sm">AI</div>`
+                : `<div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs flex-shrink-0 font-bold shadow-sm border border-emerald-200"><i class="fa-solid fa-user"></i></div>`;
+            
+            const bubbleClass = isAi 
+                ? "bg-white p-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-200/80 text-sm text-slate-800 max-w-[85%] sm:max-w-lg leading-relaxed"
+                : "bg-emerald-600 text-white p-4 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[85%] sm:max-w-lg leading-relaxed";
+
+            const innerHtml = isAi 
+                ? `${avatar}<div class="${bubbleClass}">${text}</div>`
+                : `<div class="${bubbleClass}">${text}</div>${avatar}`;
+
+            msgDiv.innerHTML = innerHtml;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+        const simulateAiResponse = (prompt) => {
+            const lowerPrompt = prompt.toLowerCase();
+            let response = "";
+
+            if(lowerPrompt.includes("cabai") || lowerPrompt.includes("tomat")) {
+                response = "Untuk <strong>Cabai dan Tomat</strong>, pastikan jarak tanam ideal (50-60cm) agar sirkulasi udara di lahan baik. Jika ada serangan ulat/kutu daun, gunakan insektisida nabati atau pestisida kimia (abamektin) sesuai dosis anjuran. Jangan lupa rutin berikan pupuk NPK berimbang! 🌱";
+            } else if (lowerPrompt.includes("kol")) {
+                response = "Untuk hama <strong>Ulat Krop pada Kol (Plutella xylostella)</strong>, lakukan rotasi tanaman untuk memutus siklus hidupnya. Jika serangan parah, aplikasikan bio-insektisida berbasis <em>Bacillus thuringiensis</em> pada sore hari. 🥬";
+            } else if (lowerPrompt.includes("pupuk")) {
+                response = "Pemupukan yang baik harus memenuhi kebutuhan unsur makro (NPK). Pada fase awal (vegetatif) perbanyak unsur Nitrogen (N), saat menjelang berbunga perbanyak Fosfor (P), dan saat pembuahan perbanyak unsur Kalium (K).";
+            } else {
+                response = "Tentu, saya siap membantu! Sebagai Asisten AI Koperasi, Anda bisa bertanya mengenai tips perawatan komoditi pertanian (seperti Cabai, Tomat, Kol), penanganan hama, atau racikan pupuk yang efisien. Ada hal spesifik yang bisa saya bantu analisa? 👨‍🌾";
+            }
+
+            const chatBox = document.getElementById('aiChatBox');
+            const loadingId = 'aiLoading-' + Date.now();
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = loadingId;
+            loadingDiv.className = "flex items-start space-x-3 mt-4";
+            loadingDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs flex-shrink-0 font-bold shadow-sm">AI</div>
+                <div class="bg-white px-4 py-3.5 rounded-2xl rounded-tl-none shadow-sm border border-slate-200/80 flex items-center space-x-1.5 h-[45px]">
+                    <span class="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></span>
+                    <span class="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style="animation-delay: 0.15s"></span>
+                    <span class="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style="animation-delay: 0.3s"></span>
+                </div>
+            `;
+            chatBox.appendChild(loadingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            setTimeout(() => {
+                const loader = document.getElementById(loadingId);
+                if(loader) loader.remove();
+                appendChatMessage("AI", response, true);
+            }, 1500);
+        };
+
+        window.sendQuickPrompt = (prompt) => {
+            appendChatMessage("User", prompt, false);
+            simulateAiResponse(prompt);
+        };
+        
+        window.handleAiChatSubmit = (e) => { 
+            e.preventDefault(); 
+            const inputEl = document.getElementById('aiChatInput');
+            const prompt = inputEl.value.trim();
+            if(!prompt) return;
+            
+            inputEl.value = '';
+            appendChatMessage("User", prompt, false);
+            simulateAiResponse(prompt);
+        };
+
+        // Run On Load
+        window.onload = function() {
+            loadSavedData();
+            updateDashboardUI();
+            
+            // Cek jika link diakses dengan parameter ?form=lapor (untuk simulasi langsung ke form publik anggota)
+            const urlParams = new URLSearchParams(window.location.search);
+            if(urlParams.get('form') === 'lapor') {
+                document.getElementById('dashboardContainer').classList.add('hidden');
+                document.getElementById('publicFormContainer').classList.remove('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
